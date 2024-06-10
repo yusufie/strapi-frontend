@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useParams } from "next/navigation";
 
-import Review from "@/components/Review/Review";
+import ReviewsForm from "@/components/Forms/ReviewsForm";
 
 const fetcher = async (id: string) => {
   const res = await axios.get(`http://localhost:1337/api/products/${id}`);
@@ -39,7 +39,7 @@ const Product = () => {
         <p>{productData?.data?.attributes?.details}</p>
       </article>
 
-      <Review productId={id} />
+      <ReviewsForm productId={id} />
 
     </main>
   );

@@ -1,117 +1,56 @@
 "use client";
-import React, { useState } from "react";
-import { toast } from 'react-hot-toast'
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { useParams } from "next/navigation";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { reviewSchema } from "@/lib/schemas/reviewSchema";
+import ReviewsDelete from "@/components/Forms/ReviewsDelete";
+import ReviewsUpdate from "@/components/Forms/ReviewsUpdate"
 
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+const fetcher = async (id: string) => {
+  const res = await axios.get(`http://localhost:1337/api/reviews/${id}`);
+  return res.data || [];
+};
 
-interface Props {
-    productId: any;
-    }
+const Review = () => {
+  const { id } = useParams();
 
-const Review:React.FC<Props> = ({productId}) => {
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<z.infer<typeof reviewSchema>>({
-    resolver: zodResolver(reviewSchema),
+  const {
+    data: reviewData,
+    isError,
+    isLoading,
+  } = useQuery({
+    queryKey: ["review", id],
+    queryFn: () => fetcher(id as any),
   });
 
-    // send data to the "/api/profile" endpoint
-    async function onSubmit(data: z.infer<typeof reviewSchema>) {
-      
-      try {
-        setIsSubmitting(true);
-  
-        const reviewData = {
-          data: {
-          userDisplayName: data.userDisplayName,
-          body: data.body,
-          product: productId,
-        },
-        };
-  
-        const apiUrl = `http://localhost:1337/api/reviews`;
-  
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(reviewData),
-        });
+  if (isError) {
+    return <main>Error</main>;
+  }
 
-        // console.log("reviewData:", reviewData);
-  
-        if (!response.ok) {
-          toast.error('Bir hata oluştu. Lütfen tekrar deneyin!');
-        }
-  
-        form.reset({userDisplayName: '', body: '', }); // Reset the fields value
+  if (isLoading) {
+    return <main>Loading...</main>;
+  }
 
-        toast.success('Başarıyla yorumunuz eklendi!');
-        
-      } catch (error) {
-        console.error("Error updating profile:", error);
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
+  // console.log("reviewData:", reviewData)
 
-  
   return (
-    <section>
-      <h1>Reviews:</h1>
-      <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className=" w-full space-y-6"
-          >
-            <FormField
-              control={form.control}
-              name="userDisplayName"
-              // defaultValue={user?.name ?? ""}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ad</FormLabel>
-                  <FormControl>
-                    <Input type="text" {...field} placeholder="Adınızı yazınız..." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <main className="flex flex-col gap-4 p-4">
+      <h1 className="font-bold">Review:</h1>
+      <article className="flex flex-col max-w-96 min-w-48 border rounded-md">
+        <h2>{reviewData?.data?.attributes?.userDisplayName}</h2>
 
-            <FormField
-              control={form.control}
-              name="body"
-              // defaultValue={user?.name ?? ""}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Review</FormLabel>
-                  <FormControl>
-                    <Input type="text" {...field} placeholder="Yorumunuzu yazınız..." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="flex flex-row">
+          <span>{reviewData?.data?.attributes?.body}</span>
+          <ReviewsUpdate reviewData={reviewData} reviewId={id}/>
+        </div>
+        
+        <p>{reviewData?.data?.attributes?.createdAt}</p>
+      </article>
 
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Loading..." : "Submit"}
-            </Button>
+      <ReviewsDelete reviewId={id} />
 
-          </form>
-        </Form>
-    </section>
-  )
-}
+    </main>
+  );
+};
 
-export default Review
+export default Review;
