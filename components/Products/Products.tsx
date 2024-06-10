@@ -34,7 +34,8 @@ const Products = () => {
             <Link href={`/products/${product?.id}`} key={product?.id}>
                 <article className="flex flex-col max-w-96 min-w-48 border rounded-md">
                     <h2>{product?.attributes?.name}</h2>
-                    <p>{product?.attributes?.details}</p>
+                    <span>{product?.attributes?.price}</span>
+                    <button>Details</button>
                 </article>
             </Link>
         ))}
